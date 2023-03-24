@@ -20,3 +20,4 @@ image = pipe(prompt).images[0]
 plt.imshow(image)
 plt.show()
 image.save("./test_diffusion/monet_nation_mall.png")
+print()
