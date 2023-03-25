@@ -42,13 +42,14 @@ def image_loader(image_name):
     # force picture to size 512,512
     image = image.resize(size=(512, 512))
     # fake batch dimension required to fit network's input dimensions
-    image = loader(image).unsquee
-    print(image.size())
+    image = loader(image).unsqueeze(0)
+    # print(image.size())
     return image.to(device, torch.float)
 
-
-style_img = image_loader("./kaggle_Dunhuang/Dunhuang/154 (46).jpg")
-content_img = image_loader("./pytorch_style_transfer_image/George_Washington_University_seal.png")
+# ./kaggle_Dunhuang/Dunhuang/
+# ./pytorch_style_transfer_image/
+style_img = image_loader("./pytorch_style_transfer_image/1000.webp")
+content_img = image_loader("./pytorch_style_transfer_image/test2.jpg")
 
 assert style_img.size() == content_img.size(), \
     "we need to import style and content images of the same size"
@@ -94,8 +95,9 @@ def gram_matrix(input):
     # b=number of feature maps
     # (c,d)=dimensions of a f. map (N=c*d)
 
-    features = input.view(a * b, c * d)  # resise F_XL into \hat F_XL
-
+    # Returns a new tensor with the same data as the self tensor but of a different shape.
+    features = input.view(a * b, c * d)  # resize [batch * features, height * width]
+    # .t() is transpose
     G = torch.mm(features, features.t())  # compute the gram product
 
     # we 'normalize' the values of the gram matrix
@@ -110,7 +112,8 @@ class StyleLoss(nn.Module):
 
     def forward(self, input):
         G = gram_matrix(input)
-        self.loss = F.mse_loss(G, self.target)
+        # self.loss = F.mse_loss(G, self.target)
+        self.loss = F.l1_loss(G, self.target)
         return input
 
 #%%
@@ -146,7 +149,7 @@ def get_style_model_and_losses(cnn, normalization_mean, normalization_std,
     # normalization module
     normalization = Normalization(normalization_mean, normalization_std).to(device)
 
-    # just in order to have an iterable access to or list of content/syle
+    # just in order to have an iterable access to or list of content/style
     # losses
     content_losses = []
     style_losses = []
@@ -157,6 +160,7 @@ def get_style_model_and_losses(cnn, normalization_mean, normalization_std,
 
     i = 0  # increment every time we see a conv
     for layer in cnn.children():
+        # isinstance returns True if the specified object is of the specified type
         if isinstance(layer, nn.Conv2d):
             i += 1
             name = 'conv_{}'.format(i)
@@ -239,15 +243,15 @@ def run_style_transfer(cnn, normalization_mean, normalization_std,
             model(input_img)
             style_score = 0
             content_score = 0
-
+            # sum loss
             for sl in style_losses:
                 style_score += sl.loss
             for cl in content_losses:
                 content_score += cl.loss
-
+            # multiple weight
             style_score *= style_weight
             content_score *= content_weight
-
+            # sum loss
             loss = style_score + content_score
             loss.backward()
 
@@ -264,6 +268,7 @@ def run_style_transfer(cnn, normalization_mean, normalization_std,
 
     # a last correction...
     with torch.no_grad():
+        # Clamps all elements in input into the range [ min, max ].
         input_img.clamp_(0, 1)
 
     return input_img
