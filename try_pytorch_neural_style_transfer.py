@@ -7,7 +7,7 @@
 @Date    ：2023/3/24 16:18 
 '''
 # NEURAL TRANSFER USING PYTORCH
-# https://pytorch.org/tutorials/advanced/neural_style_tutorial.html
+# from https://pytorch.org/tutorials/advanced/neural_style_tutorial.html
 #%%
 from __future__ import print_function
 
@@ -31,17 +31,19 @@ imsize = 512 if torch.cuda.is_available() else 128  # use small size if no gpu
 
 loader = transforms.Compose([
     transforms.Resize(imsize),  # scale imported image
+    # If doing image augmentation the result looks strange
     # transforms.ColorJitter(brightness=30, contrast=30, saturation=30, hue=0.1),
     transforms.ToTensor()])  # transform it into a torch tensor
 
 
 def image_loader(image_name):
+    # convert to RGB, since png image mode is RGBA, cannot fit in the same channel
     image = Image.open(image_name).convert('RGB')
     # force picture to size 512,512
     image = image.resize(size=(512, 512))
     # fake batch dimension required to fit network's input dimensions
-    image = loader(image).unsqueeze(0)
-    # check if style size equal to content
+    image = loader(image).unsquee
+    print(image.size())
     return image.to(device, torch.float)
 
 
@@ -82,7 +84,9 @@ class ContentLoss(nn.Module):
         self.target = target.detach()
 
     def forward(self, input):
-        self.loss = F.mse_loss(input, self.target)
+        # self.loss = F.mse_loss(input, self.target)
+        # fine tune change mse_loss to l1 loss
+        self.loss = F.l1_loss(input, self.target)
         return input
 #%%
 def gram_matrix(input):
