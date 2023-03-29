@@ -4,7 +4,8 @@
 @Project ：6501_Capstone 
 @File    ：try_keras.py
 @Author  ：Yixi Liang
-@Date    ：2023/2/16 23:06 
+@Date    ：2023/2/16 23:06
+# from https://keras.io/examples/generative/cyclegan/
 '''
 #%%
 import os
@@ -21,7 +22,7 @@ import tensorflow_datasets as tfds
 tfds.disable_progress_bar()
 autotune = tf.data.AUTOTUNE
 
-EPOCH = 5
+EPOCH = 10
 
 CUR_PATH = os.getcwd()
 
@@ -30,7 +31,7 @@ CUR_PATH = os.getcwd()
 BATCH_SIZE = None
 VALIDATION_SPLIT = 0.3
 SEED = 1
-train_chinese_painting = tf.keras.utils.image_dataset_from_directory(
+train_dunhuang_painting = tf.keras.utils.image_dataset_from_directory(
     CUR_PATH + '/kaggle_Dunhuang/',
     validation_split = VALIDATION_SPLIT,
     seed = SEED,
@@ -39,7 +40,7 @@ train_chinese_painting = tf.keras.utils.image_dataset_from_directory(
     image_size=(256, 256),
     subset='training',
 )
-test_chinese_painting = tf.keras.utils.image_dataset_from_directory(
+test_dunhuang_painting = tf.keras.utils.image_dataset_from_directory(
     CUR_PATH + '/kaggle_Dunhuang/',
     validation_split=VALIDATION_SPLIT,
     seed=SEED,
@@ -123,8 +124,8 @@ test_real_photo = (
 #%%
 
 # Apply the preprocessing operations to the training data
-train_chinese_painting = (
-    train_chinese_painting.map(preprocess_train_image, num_parallel_calls=autotune)
+train_dunhuang_painting = (
+    train_dunhuang_painting.map(preprocess_train_image, num_parallel_calls=autotune)
     .cache()
     .shuffle(buffer_size)
     .batch(batch_size)
@@ -137,8 +138,8 @@ train_landscape = (
 )
 
 # Apply the preprocessing operations to the test data
-test_chinese_painting = (
-    test_chinese_painting.map(preprocess_test_image, num_parallel_calls=autotune)
+test_dunhuang_painting = (
+    test_dunhuang_painting.map(preprocess_test_image, num_parallel_calls=autotune)
     .cache()
     .shuffle(buffer_size)
     .batch(batch_size)
@@ -152,7 +153,7 @@ test_landscape = (
 
 #%%
 _, ax = plt.subplots(4, 2, figsize=(10, 15))
-for i, samples in enumerate(zip(train_chinese_painting.take(4), train_landscape.take(4))):
+for i, samples in enumerate(zip(train_dunhuang_painting.take(4), train_landscape.take(4))):
     monet = (((samples[0][0] * 127.5) + 127.5).numpy()).astype(np.uint8)
     photo = (((samples[1][0] * 127.5) + 127.5).numpy()).astype(np.uint8)
     ax[i, 0].imshow(monet)
@@ -512,7 +513,7 @@ class GANMonitor(keras.callbacks.Callback):
 
     def on_epoch_end(self, epoch, logs=None):
         _, ax = plt.subplots(4, 2, figsize=(12, 12))
-        for i, img in enumerate(test_chinese_painting.take(self.num_img)):
+        for i, img in enumerate(test_dunhuang_painting.take(self.num_img)):
             prediction = self.model.gen_G(img)[0].numpy()
             prediction = (prediction * 127.5 + 127.5).astype(np.uint8)
             img = (img[0] * 127.5 + 127.5).numpy().astype(np.uint8)
@@ -573,7 +574,7 @@ cycle_gan_model.compute_output_shape(input_shape=(None, 256, 256, 3))
 #%%
 # load previous model
 # use train model
-weight_file = "./model_checkpoints/cyclegan_checkpoints_dunhuang_2Train.005"
+weight_file = "./model_checkpoints/cyclegan_checkpoints_dunhuang_2Train.010"
 cycle_gan_model.load_weights(weight_file).expect_partial()
 print("Weights loaded successfully")
 
@@ -602,7 +603,7 @@ plt.show()
 # Here we will train the model for just one epoch as each epoch takes around
 # 7 minutes on a single P100 backed machine.
 cycle_gan_model.fit(
-    tf.data.Dataset.zip((train_chinese_painting, train_landscape)),
+    tf.data.Dataset.zip((train_dunhuang_painting, train_landscape)),
     epochs=EPOCH,
     callbacks=[plotter, model_checkpoint_callback],
 )
@@ -613,7 +614,7 @@ cycle_gan_model.fit(
 # print("Weights loaded successfully")
 
 _, ax = plt.subplots(4, 2, figsize=(10, 15))
-for i, img in enumerate(test_chinese_painting.take(4)):
+for i, img in enumerate(test_dunhuang_painting.take(4)):
     prediction = cycle_gan_model.gen_G(img, training=False)[0].numpy()
     prediction = (prediction * 127.5 + 127.5).astype(np.uint8)
     img = (img[0] * 127.5 + 127.5).numpy().astype(np.uint8)
