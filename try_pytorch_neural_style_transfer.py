@@ -49,7 +49,7 @@ def image_loader(image_name):
 # ./kaggle_Dunhuang/Dunhuang/
 # ./pytorch_style_transfer_image/
 style_img = image_loader("./pytorch_style_transfer_image/1000.webp")
-content_img = image_loader("./pytorch_style_transfer_image/test2.jpg")
+content_img = image_loader("./pytorch_style_transfer_image/test_3.jpg")
 
 assert style_img.size() == content_img.size(), \
     "we need to import style and content images of the same size"
@@ -65,7 +65,7 @@ def imshow(tensor, title=None):
     plt.imshow(image)
     if title is not None:
         plt.title(title)
-    plt.pause(0.001) # pause a bit so that plots are updated
+    # plt.pause(0.001) # pause a bit so that plots are updated
 
 
 plt.figure()
@@ -139,6 +139,7 @@ class Normalization(nn.Module):
 
 #%%
 # desired depth layers to compute style/content losses :
+# con_1-conv12
 content_layers_default = ['conv_3']
 style_layers_default = ['conv_1', 'conv_2', 'conv_3', 'conv_4', 'conv_5']
 

@@ -17,6 +17,7 @@ base_image_path = '/home/ubuntu/Capstone_Project/real_photo/A/National_mall.jpg'
 # style_reference_image_path = keras.utils.get_file(
 #     "starry_night.jpg", "https://i.imgur.com/9ooB60I.jpg"
 # )
+
 style_reference_image_path = '/home/ubuntu/Capstone_Project/kaggle_Dunhuang/Dunhuang/045 (88).jpg'
 result_prefix = "./test_nst/nation_monet_generated8"
 
@@ -194,7 +195,7 @@ combination_image = tf.Variable(preprocess_image(base_image_path))
 print('*'*30)
 print('Start training')
 
-iterations = 5000
+iterations = 3000
 for i in range(1, iterations + 1):
     loss, grads = compute_loss_and_grads(
         combination_image, base_image, style_reference_image
