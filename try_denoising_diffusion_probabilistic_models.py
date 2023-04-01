@@ -9,6 +9,8 @@
 '''
 #%%
 import math
+import os
+
 import numpy as np
 import matplotlib.pyplot as plt
 
@@ -18,13 +20,13 @@ from tensorflow import keras
 from tensorflow.keras import layers
 import tensorflow_datasets as tfds
 #%%
-batch_size = 32
-num_epochs = 100  # Just for the sake of demonstration
+batch_size = None
+num_epochs = 5  # Just for the sake of demonstration
 total_timesteps = 1000
 norm_groups = 8  # Number of groups used in GroupNormalization layer
 learning_rate = 2e-4
 
-img_size = 64
+img_size = 32
 img_channels = 3
 clip_min = -1.0
 clip_max = 1.0
@@ -35,11 +37,23 @@ widths = [first_conv_channels * mult for mult in channel_multiplier]
 has_attention = [False, False, True, True]
 num_res_blocks = 2  # Number of residual blocks
 
-dataset_name = "oxford_flowers102"
+# dataset_name = "oxford_flowers102"
 splits = ["train"]
+
+# set parameter of loading data
+SEED = 1
+CUR_PATH = os.getcwd()
+buffer_size = 1
 #%%
 # Load the dataset
-(ds,) = tfds.load(dataset_name, split=splits, with_info=False, shuffle_files=True)
+# (ds,) = tfds.load(dataset_name, split=splits, with_info=False, shuffle_files=True)
+ds = tf.keras.utils.image_dataset_from_directory(
+    CUR_PATH + '/kaggle_Dunhuang/',
+    seed = SEED,
+    batch_size = None,
+    shuffle=True,
+    image_size=(256, 256),
+)
 
 
 def augment(img):
@@ -80,19 +94,19 @@ def resize_and_rescale(img, size):
     return img
 
 
-def train_preprocessing(x):
-    img = x["image"]
-    img = resize_and_rescale(img, size=(img_size, img_size))
+def train_preprocessing(x, label):
+    img = resize_and_rescale(x, size=(img_size, img_size))
     img = augment(img)
     return img
 
 
 train_ds = (
     ds.map(train_preprocessing, num_parallel_calls=tf.data.AUTOTUNE)
-    .batch(batch_size, drop_remainder=True)
-    .shuffle(batch_size * 2)
+    # .batch(batch_size, drop_remainder=True)
+    .shuffle(buffer_size)
     .prefetch(tf.data.AUTOTUNE)
 )
+
 #%%
 class GaussianDiffusion:
     """Gaussian diffusion utility.
@@ -127,9 +141,11 @@ class GaussianDiffusion:
         self.num_timesteps = int(timesteps)
 
         alphas = 1.0 - betas
+        # np.cumprod: Returns the cumulative product of elements along the given axis.
         alphas_cumprod = np.cumprod(alphas, axis=0)
         alphas_cumprod_prev = np.append(1.0, alphas_cumprod[:-1])
 
+        # tf.constant: Creates a constant tensor from a tensor-like object.
         self.betas = tf.constant(betas, dtype=tf.float32)
         self.alphas_cumprod = tf.constant(alphas_cumprod, dtype=tf.float32)
         self.alphas_cumprod_prev = tf.constant(alphas_cumprod_prev, dtype=tf.float32)
@@ -610,16 +626,29 @@ model.compile(
     optimizer=keras.optimizers.Adam(learning_rate=learning_rate),
 )
 
+checkpoint_filepath = CUR_PATH + '/DDPM_model/ddpm_model.ckpt'
+model_checkpoint_callback = tf.keras.callbacks.ModelCheckpoint(
+    filepath=checkpoint_filepath,
+    save_weights_only=True,
+    monitor='loss',
+    mode='min',
+    save_best_only=True)
+
+model.load_weights(CUR_PATH + "/DDPM_model/ddpm_model.ckpt")
+#%%
 # Train the model
 model.fit(
     train_ds,
     epochs=num_epochs,
     batch_size=batch_size,
-    callbacks=[keras.callbacks.LambdaCallback(on_epoch_end=model.plot_images)],
+    callbacks=[keras.callbacks.LambdaCallback(on_epoch_end=model.plot_images),
+               model_checkpoint_callback],
 )
 #%%
 # # Load the model weights
-# model.ema_network.load_weights("checkpoints/diffusion_model_checkpoint")
-#
+# model.ema_network.load_weights(CUR_PATH + "/DDPM_model/ddpm_model.ckpt")
+#%%
 # # Generate and plot some samples
-# model.plot_images(num_rows=4, num_cols=8)
+model.plot_images(num_rows=4, num_cols=8)
+
+# model.save_weights(filepath=CUR_PATH + '/DDPM_model/ddpm_model.ckpt')
