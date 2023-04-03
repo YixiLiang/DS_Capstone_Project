@@ -13,16 +13,14 @@ import os
 
 import matplotlib.pyplot as plt
 import tensorflow as tf
-import tensorflow_datasets as tfds
 
 from tensorflow import keras
 from keras import layers
-#%%
+#######################################
 # data
-dataset_name = "oxford_flowers102"
 dataset_repetitions = 5
 num_epochs = 50  # train for at least 50 epochs for good results
-image_size = 64
+image_size = 256
 # KID = Kernel Inception Distance, see related section
 kid_image_size = 75
 kid_diffusion_steps = 5
@@ -39,7 +37,7 @@ widths = [32, 64, 96, 128]
 block_depth = 2
 
 # optimization
-batch_size = 64
+batch_size = 16
 ema = 0.999
 learning_rate = 1e-3
 weight_decay = 1e-4
@@ -48,12 +46,13 @@ weight_decay = 1e-4
 cur_path = os.getcwd()
 seed = 1
 validation_split = 0.3
-#%%
+#######################################
 def preprocess_image(data, flag):
     # center crop image
     height = tf.shape(data)[0]
     width = tf.shape(data)[1]
     crop_size = tf.minimum(height, width)
+    # Crops an image to a specified bounding box.
     image = tf.image.crop_to_bounding_box(
         data,
         (height - crop_size) // 2,
@@ -95,7 +94,7 @@ def prepare_dataset(subset):
 # load dataset
 train_dataset = prepare_dataset('training')
 val_dataset = prepare_dataset("validation")
-#%%
+#######################################
 class KID(keras.metrics.Metric):
     def __init__(self, name, **kwargs):
         super().__init__(name=name, **kwargs)
@@ -157,8 +156,11 @@ class KID(keras.metrics.Metric):
 
     def reset_state(self):
         self.kid_tracker.reset_state()
-#%%
+#######################################
 def sinusoidal_embedding(x):
+    global embedding_dims, embedding_max_frequency
+    embedding_dims = 32
+    embedding_max_frequency = 1000.0
     embedding_min_frequency = 1.0
     frequencies = tf.exp(
         tf.linspace(
@@ -239,6 +241,7 @@ def get_network(image_size, widths, block_depth):
     x = layers.Conv2D(3, kernel_size=1, kernel_initializer="zeros")(x)
 
     return keras.Model([noisy_images, noise_variances], x, name="residual_unet")
+#######################################
 #%%
 class DiffusionModel(keras.Model):
     def __init__(self, image_size, widths, block_depth):
@@ -399,7 +402,7 @@ class DiffusionModel(keras.Model):
 
         return {m.name: m.result() for m in self.metrics}
 
-    def plot_images(self, epoch=None, logs=None, num_rows=3, num_cols=6):
+    def plot_images(self, epoch=None, logs=None, num_rows=2, num_cols=2):
         # plot random generated images for visual evaluation of generation quality
         generated_images = self.generate(
             num_images=num_rows * num_cols,
@@ -416,7 +419,7 @@ class DiffusionModel(keras.Model):
         plt.tight_layout()
         plt.show()
         plt.close()
-#%%
+#######################################
 # create and compile the model
 model = DiffusionModel(image_size, widths, block_depth)
 # below tensorflow 2.9:
@@ -432,7 +435,7 @@ model.compile(
 # pixelwise mean absolute error is used as loss
 
 # save the best model based on the validation KID metric
-checkpoint_path = "DDIM_model/diffusion_model"
+checkpoint_path = "checkpoints/DDIP_256/"
 checkpoint_callback = tf.keras.callbacks.ModelCheckpoint(
     filepath=checkpoint_path,
     save_weights_only=True,
@@ -444,6 +447,8 @@ checkpoint_callback = tf.keras.callbacks.ModelCheckpoint(
 # calculate mean and variance of training dataset for normalization
 model.normalizer.adapt(train_dataset)
 
+model.load_weights(checkpoint_path)
+#%%
 # run training and plot generated images periodically
 model.fit(
     train_dataset,
