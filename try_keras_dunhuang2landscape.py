@@ -574,7 +574,7 @@ cycle_gan_model.compute_output_shape(input_shape=(None, 256, 256, 3))
 #%%
 # load previous model
 # use train model
-weight_file = "./model_checkpoints/cyclegan_checkpoints_dunhuang_2Train.010"
+weight_file = "./model_checkpoints/cyclegan_checkpoints_dunhuang_3Train.005"
 cycle_gan_model.load_weights(weight_file).expect_partial()
 print("Weights loaded successfully")
 

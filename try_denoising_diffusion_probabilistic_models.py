@@ -649,6 +649,6 @@ model.fit(
 # model.ema_network.load_weights(CUR_PATH + "/DDPM_model/ddpm_model.ckpt")
 #%%
 # # Generate and plot some samples
-model.plot_images(num_rows=4, num_cols=8)
+model.plot_images(num_rows=2, num_cols=2)
 
 # model.save_weights(filepath=CUR_PATH + '/DDPM_model/ddpm_model.ckpt')
