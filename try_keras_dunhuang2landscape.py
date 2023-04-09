@@ -579,8 +579,8 @@ cycle_gan_model.load_weights(weight_file).expect_partial()
 print("Weights loaded successfully")
 
 #%%
-_, ax = plt.subplots(4, 2, figsize=(10, 15))
-for i, img in enumerate(test_landscape.take(4)):
+_, ax = plt.subplots(2, 2, figsize=(10, 10))
+for i, img in enumerate(test_landscape.take(2)):
     prediction = cycle_gan_model.gen_F(img, training=False)[0].numpy()
     prediction = (prediction * 127.5 + 127.5).astype(np.uint8)
     img = (img[0] * 127.5 + 127.5).numpy().astype(np.uint8)
@@ -634,9 +634,9 @@ plt.show()
 
 #%%
 # real world picture
-_, ax = plt.subplots(4, 2, figsize=(10, 15))
+_, ax = plt.subplots(2, 2, figsize=(10, 10))
 
-for i, img in enumerate(test_real_photo.take(4)):
+for i, img in enumerate(test_real_photo.take(2)):
     prediction = cycle_gan_model.gen_F(img, training=False)[0].numpy()
     prediction = (prediction * 127.5 + 127.5).astype(np.uint8)
     img = (img[0] * 127.5 + 127.5).numpy().astype(np.uint8)
