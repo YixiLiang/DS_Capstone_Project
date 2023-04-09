@@ -21,8 +21,12 @@ import matplotlib.pyplot as plt
 
 import torchvision.transforms as transforms
 import torchvision.models as models
+import os
+import PIL
+import torchvision.transforms as T
+#%%
+cur_path = os.getcwd()
 
-import copy
 #%%
 device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
 #%%
@@ -48,8 +52,11 @@ def image_loader(image_name):
 
 # ./kaggle_Dunhuang/Dunhuang/
 # ./pytorch_style_transfer_image/
-style_img = image_loader("./pytorch_style_transfer_image/1000.webp")
-content_img = image_loader("./pytorch_style_transfer_image/test_3.jpg")
+style_img_name = '290 (12).jpg'
+content_img_name = 'huanghelou.jpeg'
+
+style_img = image_loader("./pytorch_style_transfer_image/" + style_img_name)
+content_img = image_loader("./pytorch_style_transfer_image/" + content_img_name)
 
 assert style_img.size() == content_img.size(), \
     "we need to import style and content images of the same size"
@@ -284,3 +291,7 @@ imshow(output, title='Output Image')
 # sphinx_gallery_thumbnail_number = 4
 plt.ioff()
 plt.show()
+result_name = style_img_name.split('.')[0] + "_" + content_img_name.split('.')[0] + '.jpg'
+transform = T.ToPILImage()
+img = transform(output.squeeze(0))
+img.save(cur_path + '/pytorch_style_transfer_image/result/' + result_name)
