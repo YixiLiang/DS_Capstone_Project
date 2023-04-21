@@ -52,8 +52,8 @@ def image_loader(image_name):
 
 # ./kaggle_Dunhuang/Dunhuang/
 # ./pytorch_style_transfer_image/
-style_img_name = '290 (12).jpg'
-content_img_name = 'huanghelou.jpeg'
+style_img_name = 'test.jpg'
+content_img_name = 'national_mall.jpg'
 
 style_img = image_loader("./pytorch_style_transfer_image/" + style_img_name)
 content_img = image_loader("./pytorch_style_transfer_image/" + content_img_name)
@@ -72,6 +72,7 @@ def imshow(tensor, title=None):
     plt.imshow(image)
     if title is not None:
         plt.title(title)
+    plt.show()
     # plt.pause(0.001) # pause a bit so that plots are updated
 
 
@@ -214,9 +215,6 @@ input_img = content_img.clone()
 # if you want to use white noise instead uncomment the below line:
 # input_img = torch.randn(content_img.data.size(), device=device)
 
-# add the original input image to the figure:
-plt.figure()
-imshow(input_img, title='Input Image')
 #%%
 def get_input_optimizer(input_img):
     # this line to show that input is a parameter that requires a gradient
