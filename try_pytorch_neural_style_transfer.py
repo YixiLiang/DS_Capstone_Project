@@ -52,7 +52,7 @@ def image_loader(image_name):
 
 # ./kaggle_Dunhuang/Dunhuang/
 # ./pytorch_style_transfer_image/
-style_img_name = 'test.jpg'
+style_img_name = 'buddha_portrait.jpg'
 content_img_name = 'national_mall.jpg'
 
 style_img = image_loader("./pytorch_style_transfer_image/" + style_img_name)

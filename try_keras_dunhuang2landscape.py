@@ -565,7 +565,7 @@ cycle_gan_model.compile(
 )
 # Callbacks
 plotter = GANMonitor()
-checkpoint_filepath = "./model_checkpoints/cyclegan_checkpoints_dunhuang_3Train.{epoch:03d}"
+checkpoint_filepath = "./model_checkpoints/cyclegan_checkpoints_dunhuang_4Train.{epoch:03d}"
 model_checkpoint_callback = keras.callbacks.ModelCheckpoint(
     filepath=checkpoint_filepath,
 )
@@ -574,7 +574,7 @@ cycle_gan_model.compute_output_shape(input_shape=(None, 256, 256, 3))
 #%%
 # load previous model
 # use train model
-weight_file = "./model_checkpoints/cyclegan_checkpoints_dunhuang_3Train.005"
+weight_file = "./model_checkpoints/cyclegan_checkpoints_dunhuang_3Train.010"
 cycle_gan_model.load_weights(weight_file).expect_partial()
 print("Weights loaded successfully")
 
@@ -608,11 +608,7 @@ cycle_gan_model.fit(
     callbacks=[plotter, model_checkpoint_callback],
 )
 #%%
-# Load the checkpoints
-# weight_file = "./saved_checkpoints/cyclegan_checkpoints.090"
-# cycle_gan_model.load_weights(weight_file).expect_partial()
-# print("Weights loaded successfully")
-
+# show result example using landscape dataset
 _, ax = plt.subplots(4, 2, figsize=(10, 15))
 for i, img in enumerate(test_dunhuang_painting.take(4)):
     prediction = cycle_gan_model.gen_G(img, training=False)[0].numpy()
@@ -634,9 +630,9 @@ plt.show()
 
 #%%
 # real world picture
-_, ax = plt.subplots(2, 2, figsize=(10, 10))
+_, ax = plt.subplots(3, 2, figsize=(10, 10))
 
-for i, img in enumerate(test_real_photo.take(2)):
+for i, img in enumerate(test_real_photo.take(3)):
     prediction = cycle_gan_model.gen_F(img, training=False)[0].numpy()
     prediction = (prediction * 127.5 + 127.5).astype(np.uint8)
     img = (img[0] * 127.5 + 127.5).numpy().astype(np.uint8)
