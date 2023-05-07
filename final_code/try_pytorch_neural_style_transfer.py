@@ -8,7 +8,7 @@
 '''
 # NEURAL TRANSFER USING PYTORCH
 # from https://pytorch.org/tutorials/advanced/neural_style_tutorial.html
-#%%
+# %%
 from __future__ import print_function
 
 import torch
@@ -22,14 +22,12 @@ import matplotlib.pyplot as plt
 import torchvision.transforms as transforms
 import torchvision.models as models
 import os
-import PIL
 import torchvision.transforms as T
-#%%
-cur_path = os.getcwd()
 
-#%%
+# %%
+cur_path = os.getcwd()
 device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
-#%%
+# %%
 # desired size of the output image
 imsize = 512 if torch.cuda.is_available() else 128  # use small size if no gpu
 
@@ -50,6 +48,7 @@ def image_loader(image_name):
     # print(image.size())
     return image.to(device, torch.float)
 
+
 # ./kaggle_Dunhuang/Dunhuang/
 # ./pytorch_style_transfer_image/
 style_img_name = 'buddha_portrait.jpg'
@@ -60,14 +59,14 @@ content_img = image_loader("./pytorch_style_transfer_image/" + content_img_name)
 
 assert style_img.size() == content_img.size(), \
     "we need to import style and content images of the same size"
-#%%
+# %%
 unloader = transforms.ToPILImage()  # reconvert into PIL image
-
 plt.ion()
+
 
 def imshow(tensor, title=None):
     image = tensor.cpu().clone()  # we clone the tensor to not do changes on it
-    image = image.squeeze(0)      # remove the fake batch dimension
+    image = image.squeeze(0)  # remove the fake batch dimension
     image = unloader(image)
     plt.imshow(image)
     if title is not None:
@@ -81,10 +80,12 @@ imshow(style_img, title='Style Image')
 
 plt.figure()
 imshow(content_img, title='Content Image')
-#%%
+
+
+# %%
 class ContentLoss(nn.Module):
 
-    def __init__(self, target,):
+    def __init__(self, target, ):
         super(ContentLoss, self).__init__()
         # we 'detach' the target content from the tree used
         # to dynamically compute the gradient: this is a stated value,
@@ -97,7 +98,9 @@ class ContentLoss(nn.Module):
         # fine tune change mse_loss to l1 loss
         self.loss = F.l1_loss(input, self.target)
         return input
-#%%
+
+
+# %%
 def gram_matrix(input):
     a, b, c, d = input.size()  # a=batch size(=1)
     # b=number of feature maps
@@ -112,6 +115,7 @@ def gram_matrix(input):
     # by dividing by the number of element in each feature maps.
     return G.div(a * b * c * d)
 
+
 class StyleLoss(nn.Module):
 
     def __init__(self, target_feature):
@@ -124,11 +128,13 @@ class StyleLoss(nn.Module):
         self.loss = F.l1_loss(G, self.target)
         return input
 
-#%%
+
+# %%
 cnn = models.vgg19(pretrained=True).features.to(device).eval()
 
 cnn_normalization_mean = torch.tensor([0.485, 0.456, 0.406]).to(device)
 cnn_normalization_std = torch.tensor([0.229, 0.224, 0.225]).to(device)
+
 
 # create a module to normalize input image so we can easily put it in a
 # nn.Sequential
@@ -145,11 +151,13 @@ class Normalization(nn.Module):
         # normalize img
         return (img - self.mean) / self.std
 
-#%%
+
+# %%
 # desired depth layers to compute style/content losses :
 # con_1-conv12
 content_layers_default = ['conv_3']
 style_layers_default = ['conv_1', 'conv_2', 'conv_3', 'conv_4', 'conv_5']
+
 
 def get_style_model_and_losses(cnn, normalization_mean, normalization_std,
                                style_img, content_img,
@@ -210,16 +218,21 @@ def get_style_model_and_losses(cnn, normalization_mean, normalization_std,
     model = model[:(i + 1)]
 
     return model, style_losses, content_losses
-#%%
+
+
+# %%
 input_img = content_img.clone()
+
+
 # if you want to use white noise instead uncomment the below line:
 # input_img = torch.randn(content_img.data.size(), device=device)
 
-#%%
+# %%
 def get_input_optimizer(input_img):
     # this line to show that input is a parameter that requires a gradient
     optimizer = optim.LBFGS([input_img])
     return optimizer
+
 
 def run_style_transfer(cnn, normalization_mean, normalization_std,
                        content_img, style_img, input_img, num_steps=500,
@@ -227,7 +240,8 @@ def run_style_transfer(cnn, normalization_mean, normalization_std,
     """Run the style transfer."""
     print('Building the style transfer model..')
     model, style_losses, content_losses = get_style_model_and_losses(cnn,
-        normalization_mean, normalization_std, style_img, content_img)
+                                                                     normalization_mean, normalization_std, style_img,
+                                                                     content_img)
 
     # We want to optimize the input and not the model parameters so we
     # update all the requires_grad fields accordingly
@@ -279,7 +293,8 @@ def run_style_transfer(cnn, normalization_mean, normalization_std,
 
     return input_img
 
-#%%
+
+# %%
 output = run_style_transfer(cnn, cnn_normalization_mean, cnn_normalization_std,
                             content_img, style_img, input_img)
 

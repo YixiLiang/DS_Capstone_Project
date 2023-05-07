@@ -7,7 +7,7 @@
 @Date    ：2023/2/16 23:06
 # from https://keras.io/examples/generative/cyclegan/
 '''
-#%%
+# %%
 import os
 import numpy as np
 import matplotlib.pyplot as plt
@@ -26,16 +26,16 @@ EPOCH = 10
 
 CUR_PATH = os.getcwd()
 
-#%%
+# %%
 # Load image from directory
 BATCH_SIZE = None
 VALIDATION_SPLIT = 0.3
 SEED = 1
 train_dunhuang_painting = tf.keras.utils.image_dataset_from_directory(
     CUR_PATH + '/kaggle_Dunhuang/',
-    validation_split = VALIDATION_SPLIT,
-    seed = SEED,
-    batch_size = BATCH_SIZE,
+    validation_split=VALIDATION_SPLIT,
+    seed=SEED,
+    batch_size=BATCH_SIZE,
     shuffle=True,
     image_size=(256, 256),
     subset='training',
@@ -69,8 +69,6 @@ test_landscape = tf.keras.utils.image_dataset_from_directory(
     image_size=(256, 256),
     subset='validation',
 )
-
-
 
 # Define the standard image size.
 orig_img_size = (256, 256)
@@ -108,50 +106,52 @@ def preprocess_test_image(img, label):
     img = tf.image.resize(img, [input_img_size[0], input_img_size[1]])
     img = normalize_img(img)
     return img
-#%%
+
+
+# %%
 test_real_photo = tf.keras.utils.image_dataset_from_directory(
     CUR_PATH + '/real_photo/',
-    batch_size = None
+    batch_size=None
 )
 test_real_photo = (
     test_real_photo.map(preprocess_test_image, num_parallel_calls=autotune)
-    .cache()
-    .shuffle(buffer_size)
-    .batch(batch_size)
+        .cache()
+        .shuffle(buffer_size)
+        .batch(batch_size)
 
 )
 
-#%%
+# %%
 
 # Apply the preprocessing operations to the training data
 train_dunhuang_painting = (
     train_dunhuang_painting.map(preprocess_train_image, num_parallel_calls=autotune)
-    .cache()
-    .shuffle(buffer_size)
-    .batch(batch_size)
+        .cache()
+        .shuffle(buffer_size)
+        .batch(batch_size)
 )
 train_landscape = (
     train_landscape.map(preprocess_train_image, num_parallel_calls=autotune)
-    .cache()
-    .shuffle(buffer_size)
-    .batch(batch_size)
+        .cache()
+        .shuffle(buffer_size)
+        .batch(batch_size)
 )
 
 # Apply the preprocessing operations to the test data
 test_dunhuang_painting = (
     test_dunhuang_painting.map(preprocess_test_image, num_parallel_calls=autotune)
-    .cache()
-    .shuffle(buffer_size)
-    .batch(batch_size)
+        .cache()
+        .shuffle(buffer_size)
+        .batch(batch_size)
 )
 test_landscape = (
     test_landscape.map(preprocess_test_image, num_parallel_calls=autotune)
-    .cache()
-    .shuffle(buffer_size)
-    .batch(batch_size)
+        .cache()
+        .shuffle(buffer_size)
+        .batch(batch_size)
 )
 
-#%%
+# %%
 _, ax = plt.subplots(4, 2, figsize=(10, 15))
 for i, samples in enumerate(zip(train_dunhuang_painting.take(4), train_landscape.take(4))):
     monet = (((samples[0][0] * 127.5) + 127.5).numpy()).astype(np.uint8)
@@ -159,7 +159,9 @@ for i, samples in enumerate(zip(train_dunhuang_painting.take(4), train_landscape
     ax[i, 0].imshow(monet)
     ax[i, 1].imshow(photo)
 plt.show()
-#%%
+
+
+# %%
 class ReflectionPadding2D(layers.Layer):
     """Implements Reflection Padding as a layer.
 
@@ -187,14 +189,14 @@ class ReflectionPadding2D(layers.Layer):
 
 
 def residual_block(
-    x,
-    activation,
-    kernel_initializer=kernel_init,
-    kernel_size=(3, 3),
-    strides=(1, 1),
-    padding="valid",
-    gamma_initializer=gamma_init,
-    use_bias=False,
+        x,
+        activation,
+        kernel_initializer=kernel_init,
+        kernel_size=(3, 3),
+        strides=(1, 1),
+        padding="valid",
+        gamma_initializer=gamma_init,
+        use_bias=False,
 ):
     dim = x.shape[-1]
     input_tensor = x
@@ -226,15 +228,15 @@ def residual_block(
 
 
 def downsample(
-    x,
-    filters,
-    activation,
-    kernel_initializer=kernel_init,
-    kernel_size=(3, 3),
-    strides=(2, 2),
-    padding="same",
-    gamma_initializer=gamma_init,
-    use_bias=False,
+        x,
+        filters,
+        activation,
+        kernel_initializer=kernel_init,
+        kernel_size=(3, 3),
+        strides=(2, 2),
+        padding="same",
+        gamma_initializer=gamma_init,
+        use_bias=False,
 ):
     x = layers.Conv2D(
         filters,
@@ -251,15 +253,15 @@ def downsample(
 
 
 def upsample(
-    x,
-    filters,
-    activation,
-    kernel_size=(3, 3),
-    strides=(2, 2),
-    padding="same",
-    kernel_initializer=kernel_init,
-    gamma_initializer=gamma_init,
-    use_bias=False,
+        x,
+        filters,
+        activation,
+        kernel_size=(3, 3),
+        strides=(2, 2),
+        padding="same",
+        kernel_initializer=kernel_init,
+        gamma_initializer=gamma_init,
+        use_bias=False,
 ):
     x = layers.Conv2DTranspose(
         filters,
@@ -274,14 +276,15 @@ def upsample(
         x = activation(x)
     return x
 
-#%%
+
+# %%
 def get_resnet_generator(
-    filters=64,
-    num_downsampling_blocks=2,
-    num_residual_blocks=9,
-    num_upsample_blocks=2,
-    gamma_initializer=gamma_init,
-    name=None,
+        filters=64,
+        num_downsampling_blocks=2,
+        num_residual_blocks=9,
+        num_upsample_blocks=2,
+        gamma_initializer=gamma_init,
+        name=None,
 ):
     img_input = layers.Input(shape=input_img_size, name=name + "_img_input")
     x = ReflectionPadding2D(padding=(3, 3))(img_input)
@@ -312,10 +315,12 @@ def get_resnet_generator(
 
     model = keras.models.Model(img_input, x, name=name)
     return model
-#%%
+
+
+# %%
 
 def get_discriminator(
-    filters=64, kernel_initializer=kernel_init, num_downsampling=3, name=None
+        filters=64, kernel_initializer=kernel_init, num_downsampling=3, name=None
 ):
     img_input = layers.Input(shape=input_img_size, name=name + "_img_input")
     x = layers.Conv2D(
@@ -363,16 +368,17 @@ gen_F = get_resnet_generator(name="generator_F")
 disc_X = get_discriminator(name="discriminator_X")
 disc_Y = get_discriminator(name="discriminator_Y")
 
-#%%
+
+# %%
 class CycleGan(keras.Model):
     def __init__(
-        self,
-        generator_G,
-        generator_F,
-        discriminator_X,
-        discriminator_Y,
-        lambda_cycle=10.0,
-        lambda_identity=0.5,
+            self,
+            generator_G,
+            generator_F,
+            discriminator_X,
+            discriminator_Y,
+            lambda_cycle=10.0,
+            lambda_identity=0.5,
     ):
         super().__init__()
         self.gen_G = generator_G
@@ -387,13 +393,13 @@ class CycleGan(keras.Model):
         return self.disc_X(inputs), self.disc_Y(inputs), self.gen_G(inputs), self.gen_F(inputs)
 
     def compile(
-        self,
-        gen_G_optimizer,
-        gen_F_optimizer,
-        disc_X_optimizer,
-        disc_Y_optimizer,
-        gen_loss_fn,
-        disc_loss_fn,
+            self,
+            gen_G_optimizer,
+            gen_F_optimizer,
+            disc_X_optimizer,
+            disc_Y_optimizer,
+            gen_loss_fn,
+            disc_loss_fn,
     ):
         super().compile()
         self.gen_G_optimizer = gen_G_optimizer
@@ -456,14 +462,14 @@ class CycleGan(keras.Model):
 
             # Generator identity loss
             id_loss_G = (
-                self.identity_loss_fn(real_y, same_y)
-                * self.lambda_cycle
-                * self.lambda_identity
+                    self.identity_loss_fn(real_y, same_y)
+                    * self.lambda_cycle
+                    * self.lambda_identity
             )
             id_loss_F = (
-                self.identity_loss_fn(real_x, same_x)
-                * self.lambda_cycle
-                * self.lambda_identity
+                    self.identity_loss_fn(real_x, same_x)
+                    * self.lambda_cycle
+                    * self.lambda_identity
             )
 
             # Total generator loss
@@ -504,7 +510,9 @@ class CycleGan(keras.Model):
             "D_X_loss": disc_X_loss,
             "D_Y_loss": disc_Y_loss,
         }
-#%%
+
+
+# %%
 class GANMonitor(keras.callbacks.Callback):
     """A callback to generate and save images after each epoch"""
 
@@ -532,9 +540,11 @@ class GANMonitor(keras.callbacks.Callback):
         plt.show()
         plt.close()
 
-#%%
+
+# %%
 # Loss function for evaluating adversarial loss
 adv_loss_fn = keras.losses.MeanSquaredError()
+
 
 # Define the loss function for the generators
 def generator_loss_fn(fake):
@@ -571,14 +581,14 @@ model_checkpoint_callback = keras.callbacks.ModelCheckpoint(
 )
 
 cycle_gan_model.compute_output_shape(input_shape=(None, 256, 256, 3))
-#%%
+# %%
 # load previous model
 # use train model
 weight_file = "./model_checkpoints/cyclegan_checkpoints_dunhuang_3Train.010"
 cycle_gan_model.load_weights(weight_file).expect_partial()
 print("Weights loaded successfully")
 
-#%%
+# %%
 _, ax = plt.subplots(2, 2, figsize=(10, 10))
 for i, img in enumerate(test_landscape.take(2)):
     prediction = cycle_gan_model.gen_F(img, training=False)[0].numpy()
@@ -598,8 +608,7 @@ for i, img in enumerate(test_landscape.take(2)):
 plt.tight_layout()
 plt.show()
 
-
-#%%
+# %%
 # Here we will train the model for just one epoch as each epoch takes around
 # 7 minutes on a single P100 backed machine.
 cycle_gan_model.fit(
@@ -607,7 +616,7 @@ cycle_gan_model.fit(
     epochs=EPOCH,
     callbacks=[plotter, model_checkpoint_callback],
 )
-#%%
+# %%
 # show result example using landscape dataset
 _, ax = plt.subplots(4, 2, figsize=(10, 15))
 for i, img in enumerate(test_dunhuang_painting.take(4)):
@@ -628,7 +637,7 @@ for i, img in enumerate(test_dunhuang_painting.take(4)):
 plt.tight_layout()
 plt.show()
 
-#%%
+# %%
 # real world picture
 _, ax = plt.subplots(3, 2, figsize=(10, 10))
 
@@ -650,4 +659,4 @@ for i, img in enumerate(test_real_photo.take(3)):
 
 plt.tight_layout()
 plt.show()
-#%%
+# %%
