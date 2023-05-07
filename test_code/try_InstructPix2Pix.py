@@ -43,8 +43,8 @@ image = preprocess_image(image_path)
 plt.imshow(image)
 plt.show()
 #%%
-prompt = "make the whole image change into dunhuang murals style image"
-images = pipe(prompt, image=image, num_inference_steps=50, image_guidance_scale=1.5, guidance_scale=7.5).images
+prompt = "make the whole image change into dunhuang murals"
+images = pipe(prompt, image=image, num_inference_steps=100, image_guidance_scale=1.5, guidance_scale=7.5).images
 plt.imshow(images[0])
 plt.show()
 

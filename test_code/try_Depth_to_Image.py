@@ -14,11 +14,13 @@ import PIL
 import matplotlib.pyplot as plt
 import os
 
-from diffusers import StableDiffusionDepth2ImgPipeline
+from diffusers import StableDiffusionDepth2ImgPipeline, EulerDiscreteScheduler
 
+euler_scheduler = EulerDiscreteScheduler.from_pretrained("stabilityai/stable-diffusion-2", subfolder="scheduler")
 pipe = StableDiffusionDepth2ImgPipeline.from_pretrained(
     "stabilityai/stable-diffusion-2-depth",
     torch_dtype=torch.float16,
+    scheduler=euler_scheduler
 ).to("cuda")
 
 

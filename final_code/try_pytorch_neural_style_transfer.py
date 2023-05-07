@@ -21,8 +21,12 @@ import matplotlib.pyplot as plt
 
 import torchvision.transforms as transforms
 import torchvision.models as models
+import os
+import PIL
+import torchvision.transforms as T
+#%%
+cur_path = os.getcwd()
 
-import copy
 #%%
 device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
 #%%
@@ -48,8 +52,11 @@ def image_loader(image_name):
 
 # ./kaggle_Dunhuang/Dunhuang/
 # ./pytorch_style_transfer_image/
-style_img = image_loader("./pytorch_style_transfer_image/1000.webp")
-content_img = image_loader("./pytorch_style_transfer_image/test_3.jpg")
+style_img_name = 'buddha_portrait.jpg'
+content_img_name = 'national_mall.jpg'
+
+style_img = image_loader("./pytorch_style_transfer_image/" + style_img_name)
+content_img = image_loader("./pytorch_style_transfer_image/" + content_img_name)
 
 assert style_img.size() == content_img.size(), \
     "we need to import style and content images of the same size"
@@ -65,6 +72,7 @@ def imshow(tensor, title=None):
     plt.imshow(image)
     if title is not None:
         plt.title(title)
+    plt.show()
     # plt.pause(0.001) # pause a bit so that plots are updated
 
 
@@ -207,9 +215,6 @@ input_img = content_img.clone()
 # if you want to use white noise instead uncomment the below line:
 # input_img = torch.randn(content_img.data.size(), device=device)
 
-# add the original input image to the figure:
-plt.figure()
-imshow(input_img, title='Input Image')
 #%%
 def get_input_optimizer(input_img):
     # this line to show that input is a parameter that requires a gradient
@@ -284,3 +289,7 @@ imshow(output, title='Output Image')
 # sphinx_gallery_thumbnail_number = 4
 plt.ioff()
 plt.show()
+result_name = style_img_name.split('.')[0] + "_" + content_img_name.split('.')[0] + '.jpg'
+transform = T.ToPILImage()
+img = transform(output.squeeze(0))
+img.save(cur_path + '/pytorch_style_transfer_image/result/' + result_name)
